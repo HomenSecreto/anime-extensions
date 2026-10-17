@@ -25,8 +25,13 @@ shutil.copytree(src=LOCAL_REPO.joinpath("icon"), dst=REMOTE_REPO.joinpath("icon"
 with REMOTE_REPO.joinpath("index.json").open() as remote_index_file:
     remote_index = json.load(remote_index_file)
 
-with LOCAL_REPO.joinpath("index.min.json").open() as local_index_file:
-    local_index = json.load(local_index_file)
+remote_index_path = REMOTE_REPO.joinpath("index.json")
+
+if not remote_index_path.exists():
+    remote_index_path.write_text("[]", encoding="utf-8")
+
+with remote_index_path.open(encoding="utf-8") as remote_index_file:
+    remote_index = json.load(remote_index_file)
 
 index = [
     item for item in remote_index
