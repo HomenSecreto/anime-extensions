@@ -1,3 +1,4 @@
+
 import html
 import sys
 import json
@@ -19,19 +20,27 @@ for module in to_delete:
         print(file.name)
         file.unlink(missing_ok=True)
 
-shutil.copytree(src=LOCAL_REPO.joinpath("apk"), dst=REMOTE_REPO.joinpath("apk"), dirs_exist_ok = True)
-shutil.copytree(src=LOCAL_REPO.joinpath("icon"), dst=REMOTE_REPO.joinpath("icon"), dirs_exist_ok = True)
-
-with REMOTE_REPO.joinpath("index.json").open() as remote_index_file:
-    remote_index = json.load(remote_index_file)
+shutil.copytree(
+    src=LOCAL_REPO.joinpath("apk"),
+    dst=REMOTE_REPO.joinpath("apk"),
+    dirs_exist_ok=True
+)
+shutil.copytree(
+    src=LOCAL_REPO.joinpath("icon"),
+    dst=REMOTE_REPO.joinpath("icon"),
+    dirs_exist_ok=True
+)
 
 remote_index_path = REMOTE_REPO.joinpath("index.json")
 
-if not remote_index_path.exists():
-    remote_index_path.write_text("[]", encoding="utf-8")
+if remote_index_path.exists():
+    with remote_index_path.open(encoding="utf-8") as remote_index_file:
+        remote_index = json.load(remote_index_file)
+else:
+    remote_index = []
 
-with remote_index_path.open(encoding="utf-8") as remote_index_file:
-    remote_index = json.load(remote_index_file)
+with LOCAL_REPO.joinpath("index.min.json").open(encoding="utf-8") as local_index_file:
+    local_index = json.load(local_index_file)
 
 index = [
     item for item in remote_index
@@ -53,7 +62,7 @@ with REMOTE_REPO.joinpath("index.min.json").open("w", encoding="utf-8") as index
 with REMOTE_REPO.joinpath("index.html").open("w", encoding="utf-8") as index_html_file:
     index_html_file.write('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>apks</title>\n</head>\n<body>\n<pre>\n')
     for entry in index:
-        apk_escaped = 'apk/' + html.escape(entry["apk"])
+        apk_escaped = "apk/" + html.escape(entry["apk"])
         name_escaped = html.escape(entry["name"])
         index_html_file.write(f'<a href="{apk_escaped}">{name_escaped}</a>\n')
-    index_html_file.write('</pre>\n</body>\n</html>\n')
+    index_html_file.write("</pre>\n</body>\n</html>\n")
