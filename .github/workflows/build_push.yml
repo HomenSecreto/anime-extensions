@@ -234,6 +234,32 @@ jobs:
       - name: Wait for repo checkout
         wait: checkout-repo
 
+      - name: Create repository metadata
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/signingkey.jks"
+
+          FINGERPRINT="$(keytool -exportcert \
+            -alias "$ALIAS" \
+            -keystore "$RUNNER_TEMP/signingkey.jks" \
+            -storepass "$KEY_STORE_PASSWORD" \
+            | sha256sum | awk '{print $1}')"
+
+          cat > repo/repo.json <<EOF
+          {
+            "meta": {
+              "name": "HomenSecreto Anime Extensions",
+              "website": "https://github.com/HomenSecreto/repo-anime-jv",
+              "signingKeyFingerprint": "$FINGERPRINT"
+            }
+          }
+          EOF
+
+          rm -f "$RUNNER_TEMP/signingkey.jks"
+
       - name: Merge repo
         env:
           DELETE: ${{ needs.prepare.outputs.delete }}
